@@ -3,12 +3,12 @@
 /**
  * Frontend handler - injects the Pop Redirect script
  *
- * @package Auto_Open_Tab
+ * @package POP_Redirect
  */
 
 if (! defined('ABSPATH')) exit;
 
-class Auto_Open_Tab_Frontend
+class POP_Redirect_Frontend
 {
 
     public function init()
@@ -25,24 +25,24 @@ class Auto_Open_Tab_Frontend
 
         wp_enqueue_script(
             'pop-redirect',
-            AOT_PLUGIN_URL . 'assets/js/pop-redirect.js',
+            PR_PLUGIN_URL . 'assets/js/pop-redirect.js',
             array(),
-            AOT_VERSION,
+            PR_VERSION,
             true   // Load in footer
         );
 
         wp_add_inline_script(
             'pop-redirect',
-            'window.aotConfig = ' . wp_json_encode(array(
-                'url'         => Auto_Open_Tab::get_setting('url', ''),
-                'delay'       => (int) Auto_Open_Tab::get_setting('delay', 1000),
-                'onceSession' => (bool) Auto_Open_Tab::get_setting('once_session', true),
-                'mode'        => Auto_Open_Tab::get_setting('mode', 'bar'),
-                'barPos'      => Auto_Open_Tab::get_setting('bar_position', 'bottom'),
-                'barColor'    => Auto_Open_Tab::get_setting('bar_color', '#1a73e8'),
-                'barText'     => Auto_Open_Tab::get_setting('bar_text', 'Visit our special offer'),
-                'barBtnText'  => Auto_Open_Tab::get_setting('bar_btn_text', 'Open Now'),
-                'autoText'    => Auto_Open_Tab::get_setting('auto_text', 'Click anywhere to continue'),
+            'window.prConfig = ' . wp_json_encode(array(
+                'url'         => POP_Redirect::get_setting('url', ''),
+                'delay'       => (int) POP_Redirect::get_setting('delay', 1000),
+                'onceSession' => (bool) POP_Redirect::get_setting('once_session', true),
+                'mode'        => POP_Redirect::get_setting('mode', 'bar'),
+                'barPos'      => POP_Redirect::get_setting('bar_position', 'bottom'),
+                'barColor'    => POP_Redirect::get_setting('bar_color', '#1a73e8'),
+                'barText'     => POP_Redirect::get_setting('bar_text', 'Visit our special offer'),
+                'barBtnText'  => POP_Redirect::get_setting('bar_btn_text', 'Open Now'),
+                'autoText'    => POP_Redirect::get_setting('auto_text', 'Click anywhere to continue'),
             )) . ';',
             'before'
         );
@@ -54,14 +54,14 @@ class Auto_Open_Tab_Frontend
     private function should_trigger()
     {
         // Plugin must be enabled
-        if (! Auto_Open_Tab::get_setting('enabled', 1)) return false;
+        if (! POP_Redirect::get_setting('enabled', 1)) return false;
 
         // URL must be set
-        $url = Auto_Open_Tab::get_setting('url', '');
+        $url = POP_Redirect::get_setting('url', '');
         if (empty($url)) return false;
 
         // Check trigger locations
-        $triggers = (array) Auto_Open_Tab::get_setting('trigger_on', array('pages', 'posts', 'homepage'));
+        $triggers = (array) POP_Redirect::get_setting('trigger_on', array('pages', 'posts', 'homepage'));
 
         if (in_array('homepage', $triggers) && (is_front_page() || is_home())) return true;
         if (in_array('pages', $triggers)    && is_page())                        return true;

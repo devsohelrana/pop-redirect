@@ -13,23 +13,23 @@ if (! defined('WP_UNINSTALL_PLUGIN')) {
 /**
  * Remove plugin data from the current site.
  */
-function aot_uninstall_cleanup_site_data()
+function pop_redirect_uninstall_cleanup_site_data()
 {
-    delete_option('aot_settings');
-    delete_transient('aot_activation_redirect');
+    delete_option('pr_settings');
+    delete_transient('pr_activation_redirect');
 }
 
 if (is_multisite()) {
-    $site_ids = get_sites(array(
+    $pop_redirect_site_ids = get_sites(array(
         'fields' => 'ids',
         'number' => 0,
     ));
 
-    foreach ($site_ids as $site_id) {
-        switch_to_blog((int) $site_id);
-        aot_uninstall_cleanup_site_data();
+    foreach ($pop_redirect_site_ids as $pop_redirect_site_id) {
+        switch_to_blog((int) $pop_redirect_site_id);
+        pop_redirect_uninstall_cleanup_site_data();
         restore_current_blog();
     }
 } else {
-    aot_uninstall_cleanup_site_data();
+    pop_redirect_uninstall_cleanup_site_data();
 }

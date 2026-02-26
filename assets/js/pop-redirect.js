@@ -1,34 +1,24 @@
 /**
- * Pop Redirect - Frontend Script v2.0
+ * Pop Redirect - Frontend Script
  *
- * THE REAL PROBLEM:
- * Browsers (Chrome, Firefox, Safari) block window.open() unless called
- * synchronously inside a direct user click event on a real DOM element.
- * No timeout, no scroll, no indirect trigger works reliably.
- *
- * THE SOLUTION:
- * Show a sticky notification bar with a real <a> link (target="_blank").
- * When the visitor clicks it, the browser opens the tab — guaranteed.
- * This is exactly how all major ad networks and traffic exchanges work.
- *
- * MODE: "auto" — page itself acts as a clickable layer (opens on any click)
  * MODE: "bar"  — sticky top/bottom bar with a button
+ * MODE: "auto" — first user click opens target tab (no overlay)
  */
 (function () {
   "use strict";
 
-  if (typeof aotConfig === "undefined") return;
+  if (typeof prConfig === "undefined") return;
 
-  var url = aotConfig.url || "";
-  var delay = parseInt(aotConfig.delay, 10) || 0;
-  var onceSession = !!aotConfig.onceSession;
-  var mode = aotConfig.mode === "auto" ? "auto" : "bar";
-  var barText = aotConfig.barText || "Visit our special offer";
-  var barBtnText = aotConfig.barBtnText || "Open Now";
-  var barPos = aotConfig.barPos || "bottom"; // 'top' or 'bottom'
-  var barColor = aotConfig.barColor || "#1a73e8";
-  var autoText = aotConfig.autoText || "Click anywhere to continue";
-  var doneKey = "aot_done";
+  var url = prConfig.url || "";
+  var delay = parseInt(prConfig.delay, 10) || 0;
+  var onceSession = !!prConfig.onceSession;
+  var mode = prConfig.mode === "auto" ? "auto" : "bar";
+  var barText = prConfig.barText || "Visit our special offer";
+  var barBtnText = prConfig.barBtnText || "Open Now";
+  var barPos = prConfig.barPos || "bottom"; // 'top' or 'bottom'
+  var barColor = prConfig.barColor || "#1a73e8";
+  var autoText = prConfig.autoText || "Click anywhere to continue";
+  var doneKey = "pr_done";
 
   if (!url) return;
 
@@ -71,7 +61,7 @@
     markDone();
 
     var bar = document.createElement("div");
-    bar.id = "aot-bar";
+    bar.id = "pr-bar";
 
     var isTop = barPos === "top";
 
@@ -159,7 +149,7 @@
   }
 
   function removeBar() {
-    var bar = document.getElementById("aot-bar");
+    var bar = document.getElementById("pr-bar");
     if (bar) {
       bar.style.opacity = "0";
       bar.style.transition = "opacity .25s";
@@ -170,38 +160,21 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /*  MODE: AUTO — invisible full-page overlay, opens on first click     */
-  /*  Still requires a real click but needs zero UI friction.            */
+  /*  MODE: AUTO — first real click handler (no hidden/click-block layer) */
   /* ------------------------------------------------------------------ */
-  function showAutoOverlay() {
-    markDone();
+  function setupAutoMode() {
+    var hint = null;
 
-    // Transparent clickable <a> covering the whole viewport
-    var overlay = document.createElement("a");
-    overlay.href = url;
-    overlay.target = "_blank";
-    overlay.rel = "noopener noreferrer";
-    overlay.style.cssText = [
-      "position:fixed",
-      "top:0",
-      "left:0",
-      "right:0",
-      "bottom:0",
-      "z-index:2147483646",
-      "cursor:pointer",
-      "display:block",
-      "background:transparent",
-    ].join(";");
-
-    // Optional hint label at bottom center
     if (autoText) {
-      var hint = document.createElement("div");
+      hint = document.createElement("div");
+      hint.id = "pr-auto-hint";
       hint.textContent = autoText;
       hint.style.cssText = [
-        "position:absolute",
+        "position:fixed",
         "bottom:20px",
         "left:50%",
         "transform:translateX(-50%)",
+        "z-index:2147483646",
         "background:rgba(0,0,0,.55)",
         "color:#fff",
         'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
@@ -211,47 +184,43 @@
         "white-space:nowrap",
         "pointer-events:none",
       ].join(";");
-      overlay.appendChild(hint);
+      document.body.appendChild(hint);
     }
 
-    overlay.addEventListener("click", function () {
-      markDone();
-      // Remove overlay so normal page links work again
-      setTimeout(function () {
-        overlay &&
-          overlay.parentNode &&
-          overlay.parentNode.removeChild(overlay);
-      }, 200);
-    });
+    var onFirstClick = function () {
+      var win = null;
 
-    document.body.appendChild(overlay);
+      try {
+        win = window.open(url, "_blank");
+        if (win) {
+          try {
+            win.opener = null;
+          } catch (e) {}
+        }
+      } catch (e) {
+        win = null;
+      }
+
+      if (win && !win.closed) {
+        markDone();
+      }
+
+      if (hint && hint.parentNode) {
+        hint.parentNode.removeChild(hint);
+      }
+
+      document.removeEventListener("click", onFirstClick, true);
+    };
+
+    document.addEventListener("click", onFirstClick, true);
   }
 
   /* ------------------------------------------------------------------ */
   /*  Launch after delay                                                  */
   /* ------------------------------------------------------------------ */
   function launch() {
-    var win = null;
-
-    try {
-      win = window.open(url, "_blank");
-
-      if (win) {
-        try {
-          win.opener = null;
-        } catch (e) {}
-      }
-    } catch (e) {
-      win = null;
-    }
-
-    if (win && !win.closed) {
-      markDone();
-      return;
-    }
-
     if (mode === "auto") {
-      showAutoOverlay();
+      setupAutoMode();
       return;
     }
 

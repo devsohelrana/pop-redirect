@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       Pop Redirect
  * Plugin URI:        https://sohelrana.me/pop-redirect
- * Description:       Automatically opens a specified URL in a new browser tab when visitors view any page or post on your WordPress site.
+ * Description:       Opens a specified URL in a new browser tab after visitor interaction, using bar mode or first-click mode.
  * Version:           1.0.0
  * Requires at least: 5.0
  * Requires PHP:      7.2
@@ -20,35 +20,35 @@ if (! defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AOT_VERSION',     '1.0.0');
-define('AOT_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('AOT_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('PR_VERSION',     '1.0.0');
+define('PR_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('PR_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 /**
  * Load plugin files
  */
-require_once AOT_PLUGIN_DIR . 'includes/class-pop-redirect.php';
-require_once AOT_PLUGIN_DIR . 'includes/class-pop-redirect-admin.php';
-require_once AOT_PLUGIN_DIR . 'includes/class-pop-redirect-frontend.php';
+require_once PR_PLUGIN_DIR . 'includes/class-pop-redirect.php';
+require_once PR_PLUGIN_DIR . 'includes/class-pop-redirect-admin.php';
+require_once PR_PLUGIN_DIR . 'includes/class-pop-redirect-frontend.php';
 
 /**
  * Run the plugin
  */
-function aot_run()
+function pop_redirect_run()
 {
-    $plugin = new Auto_Open_Tab();
+    $plugin = new POP_Redirect();
     $plugin->run();
 }
-aot_run();
+pop_redirect_run();
 
 /**
  * Activation hook - set default options
  */
-register_activation_hook(__FILE__, 'aot_activate');
-function aot_activate()
+register_activation_hook(__FILE__, 'pop_redirect_activate');
+function pop_redirect_activate()
 {
-    if (false === get_option('aot_settings')) {
-        add_option('aot_settings', array(
+    if (false === get_option('pr_settings')) {
+        add_option('pr_settings', array(
             'enabled'       => 1,
             'url'           => '',
             'delay'         => 1000,
@@ -57,22 +57,22 @@ function aot_activate()
         ));
     }
 
-    set_transient('aot_activation_redirect', 1, 30);
+    set_transient('pr_activation_redirect', 1, 30);
 }
 
 /**
  * Redirect to settings page once after activation
  */
-add_action('admin_init', 'aot_maybe_redirect_to_settings');
-function aot_maybe_redirect_to_settings()
+add_action('admin_init', 'pop_redirect_maybe_redirect_to_settings');
+function pop_redirect_maybe_redirect_to_settings()
 {
-    if (! get_transient('aot_activation_redirect')) {
+    if (! get_transient('pr_activation_redirect')) {
         return;
     }
 
-    delete_transient('aot_activation_redirect');
+    delete_transient('pr_activation_redirect');
 
-    if (is_network_admin() || isset($_GET['activate-multi'])) {
+    if (is_network_admin()) {
         return;
     }
 
@@ -83,8 +83,8 @@ function aot_maybe_redirect_to_settings()
 /**
  * Deactivation hook - cleanup (optional)
  */
-register_deactivation_hook(__FILE__, 'aot_deactivate');
-function aot_deactivate()
+register_deactivation_hook(__FILE__, 'pop_redirect_deactivate');
+function pop_redirect_deactivate()
 {
     // Nothing to do on deactivation
 }
